@@ -1,0 +1,73 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/build-apk.yml']
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'Backend manzili (masalan https://api.sizning-domen.uz)'
+        required: false
+  create:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    if: github.event_name != 'create' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      API_URL: ${{ github.event.inputs.api_url || vars.API_URL || 'http://10.0.2.2:8000' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android papkasini yaratish
+        working-directory: mobile
+        run: |
+          flutter create --org uz.unisupply --project-name unisupply --platforms=android .
+          rm -f test/widget_test.dart
+
+      - name: Android ruxsatlari (internet, kamera)
+        working-directory: mobile
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          CLEAR=false
+          case "$API_URL" in http://*) CLEAR=true;; esac
+          sed -i "s|<application|<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <application android:usesCleartextTraffic=\"$CLEAR\"|" "$M"
+          grep -n "uses-permission\|usesCleartext" "$M"
+
+      - name: Paketlar
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: APK yig‘ish
+        working-directory: mobile
+        run: |
+          echo "API_URL = $API_URL"
+          flutter build apk --release --dart-define=API_URL="$API_URL"
+          cp build/app/outputs/flutter-apk/app-release.apk UniSupply.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unisupply-apk
+          path: mobile/UniSupply.apk
+          retention-days: 30
+
+      - name: GitHub Release (faqat v* tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/UniSupply.apk
