@@ -53,6 +53,12 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
+      - name: Ilova nomi va ikonkasi
+        working-directory: mobile
+        run: |
+          sed -i 's|android:label="[^"]*"|android:label="UniSupply"|' android/app/src/main/AndroidManifest.xml
+          dart run flutter_launcher_icons
+
       - name: APK yig‘ish
         working-directory: mobile
         run: |
