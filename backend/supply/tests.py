@@ -63,3 +63,17 @@ class WorkflowTest(APITestCase):
         from django.contrib import admin as dj
         from .admin import ProductAdmin
         self.assertIn("data:image/svg+xml", ProductAdmin(Product, dj.site).qr(self.p))
+
+    def test_stock_in_and_password(self):
+        url = f"/api/products/{self.p.id}/stock_in/"
+        self.client.force_authenticate(self.fac)
+        self.assertEqual(self.client.post(url, {"quantity": 5}).status_code, 403)
+        self.client.force_authenticate(self.wh)
+        self.assertEqual(self.client.post(url, {"quantity": 5}).data["stock"], 9)
+        self.assertEqual(self.client.post(url, {"quantity": 0}).status_code, 400)
+        self.sup.set_password("oldpass123"); self.sup.save()
+        self.client.force_authenticate(self.sup)
+        bad = {"old_password": "bad", "new_password": "newpass123"}
+        self.assertEqual(self.client.post("/api/auth/change_password/", bad).status_code, 400)
+        ok = {"old_password": "oldpass123", "new_password": "newpass123"}
+        self.assertEqual(self.client.post("/api/auth/change_password/", ok).status_code, 200)

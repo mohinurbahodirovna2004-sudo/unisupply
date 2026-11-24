@@ -124,6 +124,23 @@ class Api {
   }
 
   static Future<dynamic> get(String path) => _send('GET', path);
+
+  /// Fayl (masalan Excel) yuklab olish.
+  static Future<List<int>> getBytes(String path) async {
+    Future<http.Response> go() =>
+        http.get(Uri.parse('$baseUrl$path'), headers: {if (_access != null) 'Authorization': 'Bearer $_access'});
+    http.Response r;
+    try {
+      r = await go();
+      if (r.statusCode == 401 && await _refreshToken()) r = await go();
+    } catch (_) {
+      throw ApiException('Serverga ulanib bo‘lmadi. Internetni tekshiring.');
+    }
+    if (r.statusCode >= 400) {
+      throw ApiException(r.statusCode == 403 ? 'Bu hisobot sizga ochiq emas.' : 'Xatolik (${r.statusCode})', r.statusCode);
+    }
+    return r.bodyBytes;
+  }
   static Future<dynamic> post(String path, [Map<String, dynamic>? body]) => _send('POST', path, body);
   static Future<dynamic> patch(String path, Map<String, dynamic> body) => _send('PATCH', path, body);
 

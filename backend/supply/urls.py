@@ -12,6 +12,7 @@ router.register("notifications", views.NotificationViewSet, basename="notificati
 
 urlpatterns = [
     path("me/", views.me),
+    path("auth/change_password/", views.change_password),
     path("reports/summary/", views.summary),
     path("reports/export/", views.export_xlsx),
     path("", include(router.urls)),

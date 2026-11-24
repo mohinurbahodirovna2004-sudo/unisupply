@@ -17,6 +17,18 @@ from .serializers import (DepartmentSerializer, MeSerializer, MovementSerializer
 R = User.Role
 
 
+@api_view(["POST"])
+def change_password(request):
+    old, new = request.data.get("old_password", ""), request.data.get("new_password", "")
+    if not request.user.check_password(old):
+        raise ValidationError({"old_password": "Eski parol noto‘g‘ri."})
+    if len(new) < 8:
+        raise ValidationError({"new_password": "Yangi parol kamida 8 belgidan iborat bo‘lsin."})
+    request.user.set_password(new)
+    request.user.save()
+    return Response({"ok": True})
+
+
 @api_view(["GET"])
 def me(request):
     return Response(MeSerializer(request.user).data)
@@ -42,6 +54,25 @@ class ProductViewSet(viewsets.ModelViewSet):
     def low_stock(self, request):
         qs = self.get_queryset().filter(stock__lte=F("min_stock") + F("reserved"))
         return Response(ProductSerializer(qs, many=True).data)
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def stock_in(self, request, pk=None):
+        """Ombor mudiri: buyurtmasiz kirim (boshlang‘ich qoldiq, to‘ldirish)."""
+        if request.user.role not in (R.WAREHOUSE, R.ADMIN):
+            raise PermissionDenied("Kirimni ombor mudiri qayd etadi.")
+        try:
+            qty = int(request.data.get("quantity", 0))
+        except (TypeError, ValueError):
+            qty = 0
+        if qty < 1:
+            raise ValidationError({"quantity": "Miqdor 1 dan kam bo‘lmasin."})
+        p = Product.objects.select_for_update().get(pk=pk)
+        p.stock += qty
+        p.save(update_fields=["stock"])
+        StockMovement.objects.create(product=p, kind=StockMovement.IN, quantity=qty, by=request.user,
+                                     supplier_id=request.data.get("supplier") or None)
+        return Response(ProductSerializer(p).data)
 
     @action(detail=False)
     def by_barcode(self, request):

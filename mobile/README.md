@@ -33,5 +33,9 @@ Ishlatilishi: yuqori paneldagi skaner tugmasi (hamma ekranda) → mahsulot karta
 - **Ombor:** qidiruv, mavjud/band miqdor, kam qolganda sariq
 - **Xabarlar:** buyurtma holati o‘zgarishlari
 
+## Boshqaruv tabi
+Parolni almashtirish (hamma); omborga kirim (ombor, admin); yangi mahsulot (admin, ta’minot, ombor); yangi bo‘lim (admin); Excel hisobotlar — fayl ulashish oynasi orqali saqlanadi/yuboriladi.
+Ikonka: `assets/icon.png` (CI da `flutter_launcher_icons` qo‘llaydi), ilova nomi — UniSupply.
+
 ## Hali yo‘q
-Firebase push, Excel yuklash tugmasi, mahsulot/bo‘lim boshqaruvi ekranlari.
+Firebase push, 

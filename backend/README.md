@@ -15,6 +15,8 @@ Docker + PostgreSQL: `docker compose up --build` (so‘ng `docker compose exec a
 | POST /api/auth/login/ , /refresh/ | kirish (username, password) |
 | GET /api/me/ | joriy foydalanuvchi va roli |
 | /api/departments/ /products/ /suppliers/ | CRUD (yozish rollarga bog‘liq) |
+| POST /api/products/{id}/stock_in/ {quantity} | ombor: buyurtmasiz kirim |
+| POST /api/auth/change_password/ | parolni almashtirish |
 | GET /api/products/by_barcode/?code=… | QR/shtrix-kod bo‘yicha mahsulot (404 — topilmadi) |
 | GET /api/products/low_stock/ | kam qolgan zaxira |
 | GET,POST /api/orders/ | buyurtmalar (fakultet faqat o‘zinikini ko‘radi) |
@@ -37,3 +39,6 @@ Excel yuklab olish uchun so‘rovga `Authorization: Bearer <access>` sarlavhasi 
 
 ## Keyingi bosqichlar
 Flutter ilova (shu API ustida), FCM push (Notification modeli tayyor), PDF eksport, prognoz.
+
+## Haqiqiy ishga o‘tish
+Render → Environment'da `ADMIN_USERNAME`, `ADMIN_PASSWORD` qo‘shing, `SEED_DEMO` ni `0` qiling (demo foydalanuvchilar yaratilmaydi; mavjudlarini admin panelidan o‘chiring). Foydalanuvchilarni `/admin/` orqali yarating, rolini tanlang.
